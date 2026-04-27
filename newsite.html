@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChabadOne Layout Architect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lora:ital@0;1&family=Oswald:wght@400;700&family=Roboto+Slab:wght@400;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Montserrat', sans-serif; background-color: #f3f2f0; transition: background 0.3s ease; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 10px; }
+        .settings-panel { border-left: 4px solid var(--theme-color, #d97706); }
+        .active-block { border-color: var(--theme-color, #d97706) !important; box-shadow: 0 0 0 2px var(--theme-color, #d97706); }
+        input[type="range"] { accent-color: var(--theme-color, #d97706); }
+        .setting-label { font-size: 10px; font-weight: 800; color: #78716c; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px; }
+        .setting-input { width: 100%; padding: 8px; border: 1px solid #e7e5e4; border-radius: 6px; font-size: 12px; outline: none; background: white; }
+        .setting-input:focus { border-color: var(--theme-color, #d97706); }
+        
+        .swatch-input { -webkit-appearance: none; border: 1px solid #e5e7eb; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; overflow: hidden; padding: 0; }
+        .swatch-input::-webkit-color-swatch-wrapper { padding: 0; }
+        .swatch-input::-webkit-color-swatch { border: none; border-radius: 50%; }
+        
+        .tab-btn { position: relative; }
+        .tab-btn.active::after { content: ''; position: absolute; bottom: -16px; left: 0; right: 0; height: 3px; background: #fbbf24; }
+        
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; background: #000; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+
+        /* Modal Styles */
+        .modal-overlay { background: rgba(28, 25, 23, 0.8); backdrop-filter: blur(4px); }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden text-stone-800">
+
+    <div id="auth-modal" class="hidden fixed inset-0 z-[100] modal-overlay flex items-center justify-center p-6">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-black uppercase tracking-tighter">Account Access</h2>
+                    <button onclick="toggleModal('auth-modal', false)" class="text-stone-400 hover:text-stone-600"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="setting-label">Email Address</label>
+                        <input type="email" id="auth-email" class="setting-input h-12 text-base">
+                    </div>
+                    <div>
+                        <label class="setting-label">Password</label>
+                        <input type="password" id="auth-pass" class="setting-input h-12 text-base">
+                    </div>
+                    <button onclick="signIn()" class="w-full bg-amber-600 text-white font-bold py-3 rounded-xl hover:bg-amber-700 transition-colors shadow-lg shadow-amber-600/20">SIGN IN</button>
+                    <div class="text-center">
+                        <button onclick="signUp()" class="text-[10px] font-bold text-stone-400 hover:text-amber-600 uppercase tracking-widest">Create New Account</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="load-modal" class="hidden fixed inset-0 z-[100] modal-overlay flex items-center justify-center p-6">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="p-8 border-b border-stone-100 flex justify-between items-center">
+                <h2 class="text-xl font-black uppercase tracking-tighter">Your Saved Layouts</h2>
+                <button onclick="toggleModal('load-modal', false)" class="text-stone-400 hover:text-stone-600"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="design-grid" class="p-8 grid grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                </div>
+        </div>
+    </div>
+
+    <header class="bg-stone-900 text-white p-4 shadow-xl flex justify-between items-center z-50">
+        <div class="flex items-center gap-3">
+            <div class="bg-amber-600 p-1.5 rounded-lg"><i class="fas fa-layer-group"></i></div>
+            <h1 class="text-xl font-bold m-0 tracking-tighter uppercase">Architect <span class="text-amber-500 font-light italic text-sm">v2.1</span></h1>
+        </div>
+        <div class="flex items-center gap-8">
+            <nav class="flex gap-6">
+                <button onclick="switchTab('design')" id="tab-design" class="tab-btn active text-xs font-bold tracking-widest uppercase text-white">Editor</button>
+                <button onclick="switchTab('export')" id="tab-export" class="tab-btn text-xs font-bold tracking-widest uppercase text-stone-400 hover:text-white">Get Code</button>
+            </nav>
+            <div class="h-6 w-[1px] bg-stone-700"></div>
+            
+            <div id="auth-controls" class="flex items-center gap-2">
+                <button id="login-btn" onclick="toggleModal('auth-modal', true)" class="text-[9px] font-black bg-amber-600 px-3 py-1.5 rounded hover:bg-amber-500 transition-colors uppercase">Account</button>
+                <div id="user-info" class="hidden flex items-center gap-3">
+                    <span id="user-email" class="text-[9px] font-bold text-stone-400 lowercase"></span>
+                    <button onclick="logout()" class="text-[9px] font-black border border-stone-700 px-3 py-1.5 rounded hover:bg-stone-800 uppercase">Logout</button>
+                </div>
+            </div>
+
+            <div class="h-6 w-[1px] bg-stone-700"></div>
+            <div class="flex gap-2">
+                <button onclick="loadTemplate('community')" class="text-[9px] font-black bg-stone-800 border border-stone-700 px-3 py-1.5 rounded hover:bg-stone-700">COMMUNITY</button>
+                <button onclick="loadTemplate('classic')" class="text-[9px] font-black bg-stone-800 border border-stone-700 px-3 py-1.5 rounded hover:bg-stone-700">CLASSIC</button>
+                <button onclick="loadTemplate('modern')" class="text-[9px] font-black bg-stone-800 border border-stone-700 px-3 py-1.5 rounded hover:bg-stone-700">MODERN</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 flex overflow-hidden">
+        <aside class="w-96 bg-white border-r border-stone-200 flex flex-col shadow-2xl z-40">
+            
+            <div class="p-6 border-b border-stone-100 bg-stone-50/50">
+                <h2 class="text-[10px] font-black uppercase text-stone-400 mb-4 tracking-[0.2em]">Cloud Sync</h2>
+                <div id="save-controls" class="opacity-50 pointer-events-none space-y-2">
+                    <div class="flex gap-2">
+                        <input type="text" id="design-name" placeholder="Layout Name..." class="setting-input flex-1">
+                        <button onclick="saveDesign()" class="bg-stone-800 text-white px-4 rounded-lg text-[10px] font-bold hover:bg-stone-700">SAVE</button>
+                    </div>
+                    <button onclick="toggleModal('load-modal', true)" class="w-full border-2 border-stone-200 text-stone-600 py-2 rounded-lg text-[10px] font-black uppercase hover:bg-stone-100 transition-colors">Load Existing Design</button>
+                </div>
+            </div>
+
+            <div class="p-6 border-b border-stone-100">
+                <h2 class="text-[10px] font-black uppercase text-stone-400 mb-4 tracking-[0.2em]">Global Styles</h2>
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label class="setting-label">Theme Color</label>
+                        <div class="flex items-center gap-2">
+                            <input type="color" id="global-accent" value="#d97706" oninput="updateGlobalColor('accent', this.value)" class="swatch-input">
+                            <span class="text-[10px] font-mono text-stone-400" id="accent-hex">#D97706</span>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <label class="setting-label">Page BG</label>
+                        <div class="flex items-center gap-2">
+                            <input type="color" id="global-bg" value="#ffffff" oninput="updateGlobalColor('bg', this.value)" class="swatch-input">
+                            <span class="text-[10px] font-mono text-stone-400" id="bg-hex">#FFFFFF</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="settings-container" class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                <div id="empty-settings" class="h-full flex flex-col items-center justify-center text-center opacity-30">
+                    <i class="fas fa-hand-pointer text-4xl mb-4"></i>
+                    <p class="text-xs font-medium uppercase tracking-widest">Select a block on the<br>canvas to edit details</p>
+                </div>
+                <div id="active-settings" class="hidden space-y-8 animate-in fade-in slide-in-from-left-2 duration-300"></div>
+            </div>
+
+            <div class="p-6 border-t border-stone-100 bg-stone-50/80">
+                <h2 class="text-[10px] font-black uppercase text-stone-400 mb-3 tracking-[0.2em]">Add Component</h2>
+                <div class="grid grid-cols-5 gap-2">
+                    <button onclick="addBlock('hero')" class="flex flex-col items-center gap-1 p-2 bg-white border border-stone-200 rounded-lg hover:border-amber-500 hover:text-amber-600 transition-colors">
+                        <i class="fas fa-image text-xs"></i>
+                        <span class="text-[7px] font-bold uppercase">Hero</span>
+                    </button>
+                    <button onclick="addBlock('feature')" class="flex flex-col items-center gap-1 p-2 bg-white border border-stone-200 rounded-lg hover:border-amber-500 hover:text-amber-600 transition-colors">
+                        <i class="fas fa-list-alt text-xs"></i>
+                        <span class="text-[7px] font-bold uppercase">Feat</span>
+                    </button>
+                    <button onclick="addBlock('quote')" class="flex flex-col items-center gap-1 p-2 bg-white border border-stone-200 rounded-lg hover:border-amber-500 hover:text-amber-600 transition-colors">
+                        <i class="fas fa-quote-left text-xs"></i>
+                        <span class="text-[7px] font-bold uppercase">Quote</span>
+                    </button>
+                    <button onclick="addBlock('action')" class="flex flex-col items-center gap-1 p-2 bg-white border border-stone-200 rounded-lg hover:border-amber-500 hover:text-amber-600 transition-colors">
+                        <i class="fas fa-mouse-pointer text-xs"></i>
+                        <span class="text-[7px] font-bold uppercase">Btn</span>
+                    </button>
+                    <button onclick="addBlock('video')" class="flex flex-col items-center gap-1 p-2 bg-white border border-stone-200 rounded-lg hover:border-amber-500 hover:text-amber-600 transition-colors">
+                        <i class="fas fa-play-circle text-xs"></i>
+                        <span class="text-[7px] font-bold uppercase">Video</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <section class="flex-1 bg-stone-100 p-10 overflow-y-auto custom-scrollbar">
+            <div id="canvas-view" class="max-w-4xl mx-auto w-full space-y-8 pb-32"></div>
+            <div id="export-view" class="hidden h-full flex flex-col">
+                <div class="bg-stone-900 rounded-2xl overflow-hidden flex flex-col shadow-2xl h-full border border-stone-700">
+                    <div class="p-6 border-b border-stone-800 flex justify-between items-center bg-stone-800">
+                        <div>
+                            <h3 class="text-white text-sm font-bold tracking-tight">Production Output</h3>
+                            <p class="text-stone-500 text-[10px] uppercase font-bold">Paste into ChabadOne Content Editor</p>
+                        </div>
+                        <button onclick="copyCode()" id="copy-btn" class="bg-amber-600 hover:bg-amber-500 text-white px-8 py-2 rounded-lg font-bold text-xs transition-all shadow-lg">COPY CODE</button>
+                    </div>
+                    <textarea id="output-code" spellcheck="false" readonly class="flex-1 p-8 bg-transparent text-amber-200 text-[11px] font-mono outline-none resize-none leading-relaxed"></textarea>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, where, onSnapshot, doc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAf99vTIAaRXBnbu_c60mYqefu6AiDqyJI",
+
+authDomain: "chabadonepage.firebaseapp.com",
+
+projectId: "chabadonepage",
+
+storageBucket: "chabadonepage.firebasestorage.app",
+
+messagingSenderId: "1046049217330",
+
+appId: "1:1046049217330:web:fb4737de9bf228b1ae952b"
+
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+
+        window.toggleModal = (id, show) => {
+            document.getElementById(id).classList.toggle('hidden', !show);
+        };
+
+        window.signIn = async () => {
+            const email = document.getElementById('auth-email').value;
+            const pass = document.getElementById('auth-pass').value;
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                window.toggleModal('auth-modal', false);
+            } catch (err) { alert(err.message); }
+        };
+
+        window.signUp = async () => {
+            const email = document.getElementById('auth-email').value;
+            const pass = document.getElementById('auth-pass').value;
+            try {
+                await createUserWithEmailAndPassword(auth, email, pass);
+                window.toggleModal('auth-modal', false);
+            } catch (err) { alert(err.message); }
+        };
+
+        window.logout = () => signOut(auth);
+
+        onAuthStateChanged(auth, (user) => {
+            const loginBtn = document.getElementById('login-btn');
+            const userInfo = document.getElementById('user-info');
+            const saveControls = document.getElementById('save-controls');
+            
+            if (user) {
+                currentUser = user;
+                loginBtn.classList.add('hidden');
+                userInfo.classList.remove('hidden');
+                saveControls.classList.remove('opacity-50', 'pointer-events-none');
+                document.getElementById('user-email').innerText = user.email;
+                listenToDesigns(user.uid);
+            } else {
+                currentUser = null;
+                loginBtn.classList.remove('hidden');
+                userInfo.classList.add('hidden');
+                saveControls.classList.add('opacity-50', 'pointer-events-none');
+            }
+        });
+
+        window.saveDesign = async () => {
+            const nameInput = document.getElementById('design-name');
+            const name = nameInput.value || 'Untitled Design';
+            if (!currentUser) return;
+            try {
+                await addDoc(collection(db, "designs"), {
+                    uid: currentUser.uid,
+                    name: name,
+                    blocks: window.blocks,
+                    globalAccent: window.globalAccent,
+                    globalBg: window.globalBg,
+                    timestamp: Date.now()
+                });
+                nameInput.value = '';
+                alert("Design Saved to Cloud");
+            } catch (e) { console.error(e); }
+        };
+
+        function listenToDesigns(uid) {
+            const q = query(collection(db, "designs"), where("uid", "==", uid));
+            onSnapshot(q, (snapshot) => {
+                const grid = document.getElementById('design-grid');
+                grid.innerHTML = '';
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const card = document.createElement('div');
+                    card.className = "p-4 bg-stone-50 border border-stone-200 rounded-xl hover:border-amber-500 transition-all cursor-pointer group";
+                    card.innerHTML = `
+                        <div onclick="loadUserDesign('${doc.id}')">
+                            <h3 class="text-[10px] font-black uppercase tracking-widest text-stone-800">${data.name}</h3>
+                            <p class="text-[8px] text-stone-400 mt-1">${new Date(data.timestamp).toLocaleDateString()}</p>
+                            <div class="mt-3 flex gap-1">
+                                ${data.blocks.slice(0,3).map(() => `<div class="h-1 w-4 bg-stone-200 rounded-full"></div>`).join('')}
+                            </div>
+                        </div>
+                        <button onclick="deleteUserDesign('${doc.id}')" class="mt-4 text-[9px] font-bold text-red-400 opacity-0 group-hover:opacity-100 uppercase tracking-tighter">Delete</button>
+                    `;
+                    grid.appendChild(card);
+                });
+            });
+        }
+
+        window.loadUserDesign = async (id) => {
+            const docRef = doc(db, "designs", id);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) {
+                const data = docSnap.data();
+                window.blocks = data.blocks;
+                window.updateGlobalColor('accent', data.globalAccent);
+                window.updateGlobalColor('bg', data.globalBg);
+                window.render();
+                window.toggleModal('load-modal', false);
+            }
+        };
+
+        window.deleteUserDesign = async (id) => {
+            if(confirm('Permanently delete this layout?')) await deleteDoc(doc(db, "designs", id));
+        };
+    </script>
+
+    <script>
+        // ORIGINAL LOGIC REMAINS COMPLETELY UNCHANGED
+        let blocks = [];
+        let editingId = null;
+        let globalAccent = '#d97706';
+        let globalBg = '#ffffff';
+
+        window.blocks = blocks;
+        window.globalAccent = globalAccent;
+        window.globalBg = globalBg;
+
+        const FONTS = ['Montserrat', 'Playfair Display', 'Lora', 'Oswald', 'Roboto Slab', 'Merriweather', 'Arial', 'Georgia'];
+
+        const TEMPLATES = {
+            community: [
+                { id: 't1', type: 'hero', title: 'Welcome Home', subtitle: 'A Warm Environment for Your Soul', padding: '120', bgColor: '#ffffff', titleColor: '#1c1917', font: 'Playfair Display', fontSize: '64', subtitleColor: '#d97706' },
+                { id: 't2', type: 'feature', title: 'Shabbat at the Center', text: 'Join us for inspiring services followed by a community Kiddush lunch.', imageUrl: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80', layout: 'left', borderRadius: '12', titleSize: '28', bgColor: '#f9f8f6', textColor: '#1c1917', padding: '60', font: 'Montserrat' },
+                { id: 't3', type: 'quote', text: 'To be a Jew is to be a soul on fire.', author: 'The Lubavitcher Rebbe', accentColor: '#d97706', fontSize: '32', bgColor: '#ffffff', textColor: '#1c1917', padding: '80', font: 'Lora' },
+                { id: 't4', type: 'action', label: 'Support our Work', link: 'https://example.com/donate', btnColor: '#d97706', btnTextColor: '#ffffff', radius: '30', btnPadding: '15', bgColor: '#ffffff', padding: '40', font: 'Montserrat' }
+            ],
+            classic: [
+                { id: 'c1', type: 'hero', title: 'Traditional Values', subtitle: 'Timeless Wisdom for Modern Life', padding: '100', bgColor: '#fdfcfb', titleColor: '#3e2723', font: 'Georgia', fontSize: '50', subtitleColor: '#5d4037' },
+                { id: 'c2', type: 'quote', text: 'The candle of God is the soul of man.', author: 'Proverbs', accentColor: '#8d6e63', fontSize: '28', bgColor: '#ffffff', textColor: '#3e2723', padding: '60', font: 'Georgia' },
+                { id: 'c3', type: 'action', label: 'LEARN MORE', link: '#', btnColor: '#3e2723', btnTextColor: '#ffffff', radius: '0', btnPadding: '14', bgColor: '#fdfcfb', padding: '40', font: 'Oswald' }
+            ],
+            modern: [
+                { id: 'm1', type: 'hero', title: 'CONNECT.', subtitle: 'RELEVANT. AUTHENTIC. YOU.', padding: '150', bgColor: '#111827', titleColor: '#ffffff', font: 'Oswald', fontSize: '80', subtitleColor: '#fbbf24' },
+                { id: 'm2', type: 'video', videoId: 'dQw4w9WgXcQ', padding: '0', bgColor: '#111827' },
+                { id: 'm3', type: 'action', label: 'GET INVOLVED', link: '#', btnColor: '#fbbf24', btnTextColor: '#111827', radius: '50', btnPadding: '20', bgColor: '#111827', padding: '80', font: 'Montserrat' }
+            ]
+        };
+
+        window.updateGlobalColor = function(type, val) {
+            if (type === 'accent') {
+                window.globalAccent = val;
+                document.getElementById('accent-hex').innerText = val.toUpperCase();
+                document.documentElement.style.setProperty('--theme-color', val);
+            } else {
+                window.globalBg = val;
+                document.getElementById('bg-hex').innerText = val.toUpperCase();
+            }
+            render();
+        }
+
+        window.addBlock = function(type) {
+            const id = 'b' + Date.now();
+            let config = { id, type, padding: '60', bgColor: window.globalBg, textColor: '#1c1917', font: 'Montserrat' };
+            switch(type) {
+                case 'hero': Object.assign(config, { title: 'New Banner', subtitle: 'Headline text here', titleColor: '#1c1917', font: 'Playfair Display', fontSize: '48', subtitleColor: window.globalAccent }); break;
+                case 'feature': Object.assign(config, { title: 'Our Feature', text: 'Explain the details here.', imageUrl: 'https://images.unsplash.com/photo-1518391846015-55a9cb000b21?auto=format&fit=crop&w=800&q=80', layout: 'left', borderRadius: '8', titleSize: '24' }); break;
+                case 'quote': Object.assign(config, { text: 'Type your inspiration here.', author: 'Source Name', accentColor: window.globalAccent, fontSize: '24', font: 'Lora' }); break;
+                case 'action': Object.assign(config, { label: 'Click Here', link: 'https://', btnColor: window.globalAccent, btnTextColor: '#ffffff', radius: '4', btnPadding: '12' }); break;
+                case 'video': Object.assign(config, { videoId: '7R_C7rU2vS0', padding: '40' }); break;
+            }
+            window.blocks.push(config);
+            window.editingId = id;
+            render();
+        }
+
+        window.deleteBlock = function(id) {
+            window.blocks = window.blocks.filter(b => b.id !== id);
+            if(window.editingId === id) window.editingId = null;
+            render();
+        }
+
+        window.move = function(idx, dir) {
+            const target = idx + dir;
+            if(target < 0 || target >= window.blocks.length) return;
+            [window.blocks[idx], window.blocks[target]] = [window.blocks[target], window.blocks[idx]];
+            render();
+        }
+
+        window.update = function(key, val) {
+            const b = window.blocks.find(x => x.id === window.editingId);
+            if(b) { b[key] = val; render(false); }
+        }
+
+        window.selectBlock = function(id) { window.editingId = id; render(); }
+
+        window.switchTab = function(tab) {
+            document.getElementById('canvas-view').style.display = tab === 'design' ? 'block' : 'none';
+            document.getElementById('export-view').style.display = tab === 'export' ? 'flex' : 'none';
+            document.getElementById('tab-design').className = `tab-btn text-xs font-bold tracking-widest uppercase ${tab === 'design' ? 'text-white active' : 'text-stone-400 hover:text-white'}`;
+            document.getElementById('tab-export').className = `tab-btn text-xs font-bold tracking-widest uppercase ${tab === 'export' ? 'text-white active' : 'text-stone-400 hover:text-white'}`;
+            if (tab === 'export') generateCode();
+        }
+
+        window.render = function(resetSettings = true) {
+            const container = document.getElementById('canvas-view');
+            container.innerHTML = '';
+            window.blocks.forEach((b, idx) => {
+                const wrap = document.createElement('div');
+                wrap.className = `group relative bg-white shadow-sm border-2 rounded-xl transition-all mb-6 overflow-hidden ${window.editingId === b.id ? 'active-block' : 'border-stone-200'}`;
+                wrap.onclick = (e) => { e.stopPropagation(); selectBlock(b.id); };
+                let inner = '';
+                if(b.type === 'hero') {
+                    inner = `<div class="text-center" style="padding: ${b.padding}px 20px; background-color: ${b.bgColor};">
+                                <h1 style="font-family: '${b.font}'; color: ${b.titleColor}; font-size: ${b.fontSize}px; font-weight: 700; line-height: 1.2;">${b.title}</h1>
+                                <p style="font-family: '${b.font}'; color: ${b.subtitleColor}; font-style: italic; margin-top: 10px;">${b.subtitle}</p>
+                             </div>`;
+                } else if(b.type === 'feature') {
+                    inner = `<div class="flex gap-8 items-center ${b.layout === 'right' ? 'flex-row-reverse' : ''}" style="padding: ${b.padding}px; background-color: ${b.bgColor};">
+                                <div class="w-1/2"><img src="${b.imageUrl}" style="border-radius: ${b.borderRadius}px" class="w-full h-64 object-cover"></div>
+                                <div class="w-1/2"><h3 class="font-bold mb-4" style="font-family: '${b.font}'; color: ${b.textColor}; font-size: ${b.titleSize}px;">${b.title}</h3><div class="text-sm leading-relaxed" style="font-family: '${b.font}'; color: ${b.textColor}; opacity: 0.8">${b.text}</div></div>
+                             </div>`;
+                } else if(b.type === 'quote') {
+                    inner = `<div class="text-center" style="padding: ${b.padding}px; background-color: ${b.bgColor}; border-left: 8px solid ${b.accentColor}"><p style="font-family: '${b.font}'; font-size: ${b.fontSize}px; color: ${b.textColor}" class="italic font-serif">"${b.text}"</p><div class="mt-4 text-[10px] font-bold uppercase tracking-widest" style="font-family: '${b.font}'; color: ${b.textColor}">— ${b.author}</div></div>`;
+                } else if(b.type === 'action') {
+                    inner = `<div class="text-center" style="padding: ${b.padding}px; background-color: ${b.bgColor};"><button style="font-family: '${b.font}'; background: ${b.btnColor}; color: ${b.btnTextColor}; border-radius: ${b.radius}px; padding: ${b.btnPadding}px 40px; font-weight: 700; text-transform: uppercase; font-size: 13px; border:none;">${b.label}</button></div>`;
+                } else if(b.type === 'video') {
+                    inner = `<div style="padding: ${b.padding}px; background-color: ${b.bgColor};"><div class="video-container rounded-lg shadow-lg"><iframe src="https://www.youtube.com/embed/${b.videoId}" allowfullscreen></iframe></div></div>`;
+                }
+                wrap.innerHTML = `<div class="absolute right-4 top-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"><button onclick="event.stopPropagation(); move(${idx}, -1)" class="p-2 bg-white/90 backdrop-blur border border-stone-200 rounded-lg hover:bg-white"><i class="fas fa-chevron-up text-[10px]"></i></button><button onclick="event.stopPropagation(); move(${idx}, 1)" class="p-2 bg-white/90 backdrop-blur border border-stone-200 rounded-lg hover:bg-white"><i class="fas fa-chevron-down text-[10px]"></i></button><button onclick="event.stopPropagation(); deleteBlock('${b.id}')" class="p-2 bg-red-50/90 backdrop-blur border border-red-100 rounded-lg text-red-500 hover:bg-red-50"><i class="fas fa-times text-[10px]"></i></button></div>${inner}`;
+                container.appendChild(wrap);
+            });
+            if(resetSettings) renderSettings();
+        }
+
+        window.renderSettings = function() {
+            const empty = document.getElementById('empty-settings');
+            const active = document.getElementById('active-settings');
+            const b = window.editingId ? window.blocks.find(x => x.id === window.editingId) : null;
+            if(!b) { empty.style.display = 'flex'; active.style.display = 'none'; return; }
+            empty.style.display = 'none'; active.style.display = 'block';
+            let html = `<div class="settings-panel pl-4 space-y-6">`;
+            html += `<div class="bg-stone-50 p-4 rounded-lg space-y-4"><h3 class="text-[9px] font-black uppercase text-stone-400 tracking-tighter">Block Styling</h3><div class="flex gap-4"><div class="flex-1"><label class="setting-label">Background</label><input type="color" value="${b.bgColor}" oninput="update('bgColor', this.value)" class="swatch-input"></div><div class="flex-1"><label class="setting-label">Padding</label><input type="number" value="${b.padding}" oninput="update('padding', this.value)" class="setting-input"></div></div>${b.type !== 'video' ? `<div><label class="setting-label">Base Font</label><select onchange="update('font', this.value)" class="setting-input">${FONTS.map(f => `<option value="${f}" ${b.font === f ? 'selected' : ''}>${f}</option>`).join('')}</select></div>` : ''}</div>`;
+            if(b.type === 'hero') { html += `<div><label class="setting-label">Headline Text</label><input type="text" value="${b.title}" oninput="update('title', this.value)" class="setting-input"></div><div><label class="setting-label">Headline Color</label><input type="color" value="${b.titleColor}" oninput="update('titleColor', this.value)" class="swatch-input"></div><div><label class="setting-label">Subtitle</label><input type="text" value="${b.subtitle}" oninput="update('subtitle', this.value)" class="setting-input"></div><div><label class="setting-label">Subtitle Color</label><input type="color" value="${b.subtitleColor}" oninput="update('subtitleColor', this.value)" class="swatch-input"></div><div><label class="setting-label">Font Size</label><input type="number" value="${b.fontSize}" oninput="update('fontSize', this.value)" class="setting-input"></div>`; }
+            else if(b.type === 'feature') { html += `<div><label class="setting-label">Headline</label><input type="text" value="${b.title}" oninput="update('title', this.value)" class="setting-input"></div><div><label class="setting-label">Description</label><textarea oninput="update('text', this.value)" class="setting-input h-20">${b.text}</textarea></div><div><label class="setting-label">Image URL</label><input type="text" value="${b.imageUrl}" oninput="update('imageUrl', this.value)" class="setting-input"></div><div class="grid grid-cols-2 gap-4"><div><label class="setting-label">Title Size</label><input type="number" value="${b.titleSize}" oninput="update('titleSize', this.value)" class="setting-input"></div><div><label class="setting-label">Rounding</label><input type="number" value="${b.borderRadius}" oninput="update('borderRadius', this.value)" class="setting-input"></div></div><div><label class="setting-label">Layout</label><select onchange="update('layout', this.value)" class="setting-input"><option value="left" ${b.layout==='left'?'selected':''}>Left Image</option><option value="right" ${b.layout==='right'?'selected':''}>Right Image</option></select></div>`; }
+            else if(b.type === 'quote') { html += `<div><label class="setting-label">Quote Text</label><textarea oninput="update('text', this.value)" class="setting-input h-24">${b.text}</textarea></div><div><label class="setting-label">Sidebar Color</label><input type="color" value="${b.accentColor}" oninput="update('accentColor', this.value)" class="swatch-input"></div><div><label class="setting-label">Author Name</label><input type="text" value="${b.author}" oninput="update('author', this.value)" class="setting-input"></div><div><label class="setting-label">Text Size</label><input type="number" value="${b.fontSize}" oninput="update('fontSize', this.value)" class="setting-input"></div>`; }
+            else if(b.type === 'action') { html += `<div><label class="setting-label">Button Label</label><input type="text" value="${b.label}" oninput="update('label', this.value)" class="setting-input"></div><div><label class="setting-label">External Link</label><input type="text" value="${b.link}" oninput="update('link', this.value)" class="setting-input"></div><div class="grid grid-cols-2 gap-4"><div><label class="setting-label">Btn Color</label><input type="color" value="${b.btnColor}" oninput="update('btnColor', this.value)" class="swatch-input"></div><div><label class="setting-label">Text Color</label><input type="color" value="${b.btnTextColor}" oninput="update('btnTextColor', this.value)" class="swatch-input"></div></div><div><label class="setting-label">Roundedness</label><input type="range" min="0" max="50" value="${b.radius}" oninput="update('radius', this.value)" class="w-full"></div>`; }
+            else if(b.type === 'video') { html += `<div><label class="setting-label">YouTube Video ID</label><input type="text" value="${b.videoId}" oninput="update('videoId', this.value)" class="setting-input"></div>`; }
+            html += `</div>`; active.innerHTML = html;
+        }
+
+        window.generateCode = function() {
+            let css = `<style type="text/css">@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&family=Lora:ital@0;1&family=Oswald:wght@400;700&family=Roboto+Slab:wght@400;700&family=Merriweather:wght@400;700&display=swap');.co-wrap{font-family:'Montserrat',sans-serif;line-height:1.6;margin:0;padding:0}.co-b{width:100%;clear:both;box-sizing:border-box;overflow:hidden}.co-btn{display:inline-block;text-decoration:none!important;transition:all .3s;text-align:center;border:none;cursor:pointer}.co-btn:hover{opacity:.85;transform:translateY(-1px)}.co-vid{position:relative;padding-bottom:56.25%;height:0;overflow:hidden}.co-vid iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0}@media (max-width:768px){.co-flex{display:block!important}.co-col{width:100%!important;margin-bottom:30px!important}}</style>\n`;
+            let html = `<div class="co-wrap" style="background-color:${window.globalBg};">\n`;
+            window.blocks.forEach(b => {
+                const bText = b.textColor || '#1c1917'; const f = b.font || 'Montserrat';
+                if(b.type === 'hero') html += `  <div class="co-b" style="padding:${b.padding}px 20px; background-color:${b.bgColor}; text-align:center;"><h1 style="font-family:'${f}', serif; color:${b.titleColor}; font-size:${b.fontSize}px; margin:0; font-weight:700; line-height:1.1;">${b.title}</h1><p style="font-family:'${f}', serif; color:${b.subtitleColor}; font-style:italic; margin:15px 0 0 0; font-size:20px;">${b.subtitle}</p></div>\n`;
+                else if(b.type === 'feature') html += `  <div class="co-b" style="padding:${b.padding}px 20px; background-color:${b.bgColor};"><div class="co-flex" style="max-width:1100px; margin:0 auto; display:flex; align-items:center; gap:50px; flex-direction:${b.layout==='right'?'row-reverse':'row'};"><div class="co-col" style="width:50%;"><img src="${b.imageUrl}" style="width:100%; border-radius:${b.borderRadius}px; display:block;" /></div><div class="co-col" style="width:50%;"><h2 style="font-family:'${f}'; font-size:${b.titleSize}px; font-weight:700; color:${bText}; margin:0 0 20px 0;">${b.title}</h2><div style="font-family:'${f}'; color:${bText}; opacity:0.8; font-size:16px;">${b.text}</div></div></div></div>\n`;
+                else if(b.type === 'quote') html += `  <div class="co-b" style="padding:${b.padding}px 40px; background-color:${b.bgColor}; border-left:12px solid ${b.accentColor}; text-align:center;"><div style="max-width:800px; margin:0 auto;"><p style="font-family:'${f}', serif; font-size:${b.fontSize}px; font-style:italic; color:${bText}; margin:0;">"${b.text}"</p><div style="font-family:'${f}'; font-weight:700; font-size:11px; margin-top:20px; letter-spacing:3px; text-transform:uppercase; color:${bText}; opacity:0.6;">&mdash; ${b.author}</div></div></div>\n`;
+                else if(b.type === 'action') html += `  <div class="co-b" style="padding:${b.padding}px 20px; background-color:${b.bgColor}; text-align:center;"><a href="${b.link}" target="_blank" class="co-btn" style="font-family:'${f}'; background:${b.btnColor}; color:${b.btnTextColor}; border-radius:${b.radius}px; padding:${b.btnPadding}px 50px; font-weight:700; text-transform:uppercase; font-size:14px; letter-spacing:1px;">${b.label}</a></div>\n`;
+                else if(b.type === 'video') html += `  <div class="co-b" style="padding:${b.padding}px 20px; background-color:${b.bgColor};"><div style="max-width:900px; margin:0 auto;" class="co-vid"><iframe src="https://www.youtube.com/embed/${b.videoId}" allowfullscreen></iframe></div></div>\n`;
+            });
+            html += `</div>`; document.getElementById('output-code').value = css + html;
+        }
+
+        window.copyCode = function() {
+            const el = document.getElementById('output-code'); el.select(); document.execCommand('copy');
+            const btn = document.getElementById('copy-btn'); btn.innerText = 'COPIED!'; btn.style.background = '#059669';
+            setTimeout(() => { btn.innerText = 'COPY CODE'; btn.style.background = '#d97706'; }, 2000);
+        }
+
+        window.loadTemplate = function(key) {
+            window.blocks = JSON.parse(JSON.stringify(TEMPLATES[key]));
+            window.editingId = window.blocks.length > 0 ? window.blocks[0].id : null;
+            render();
+        }
+
+        loadTemplate('community');
+    </script>
+</body>
+</html>
