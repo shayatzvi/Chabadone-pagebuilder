@@ -3,173 +3,451 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ChabadOne Builder Elite</title>
-    
+    <title>ChabadOne Layout Architect</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    
-    <script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lora:ital@0;1&family=Oswald:wght@400;700&family=Roboto+Slab:wght@400;700&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Montserrat', sans-serif; background-color: #f3f2f0; transition: background 0.3s ease; }
+        .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 10px; }
+        .settings-panel { border-left: 4px solid var(--theme-color, #d97706); }
+        .active-block { border-color: var(--theme-color, #d97706) !important; box-shadow: 0 0 0 2px var(--theme-color, #d97706); }
+        input[type="range"] { accent-color: var(--theme-color, #d97706); }
+        .setting-label { font-size: 10px; font-weight: 800; color: #78716c; text-transform: uppercase; letter-spacing: 0.05em; display: block; margin-bottom: 4px; }
+        .setting-input { width: 100%; padding: 8px; border: 1px solid #e7e5e4; border-radius: 6px; font-size: 12px; outline: none; background: white; }
+        .setting-input:focus { border-color: var(--theme-color, #d97706); }
+       
+        .swatch-input { -webkit-appearance: none; border: 1px solid #e5e7eb; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; overflow: hidden; padding: 0; }
+        .swatch-input::-webkit-color-swatch-wrapper { padding: 0; }
+        .swatch-input::-webkit-color-swatch { border: none; border-radius: 50%; }
+       
+        .tab-btn { position: relative; }
+        .tab-btn.active::after { content: ''; position: absolute; bottom: -16px; left: 0; right: 0; height: 3px; background: #fbbf24; }
+       
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; max-width: 100%; background: #000; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+    </style>
 </head>
-<body class="bg-stone-50">
-    <div id="root"></div>
+<body class="h-screen flex flex-col overflow-hidden text-stone-800">
 
-    <script type="text/babel">
-        // Deconstruct React Hooks
-        const { useState, useEffect } = React;
+    <header class="bg-stone-900 text-white p-4 shadow-xl flex justify-between items-center z-50">
+        <div class="flex items-center gap-3">
+            <div class="bg-amber-600 p-1.5 rounded-lg"><i class="fas fa-layer-group"></i></div>
+            <h1 class="text-xl font-bold m-0 tracking-tighter uppercase">Architect <span class="text-amber-500 font-light italic text-sm">v2.1</span></h1>
+        </div>
+        <div class="flex items-center gap-8">
+            <nav class="flex gap-6">
+                <button onclick="switchTab('design')" id="tab-design" class="tab-btn active text-xs font-bold tracking-widest uppercase text-white">Editor</button>
+                <button onclick="switchTab('export')" id="tab-export" class="tab-btn text-xs font-bold tracking-widest uppercase text-stone-400 hover:text-white">Get Code</button>
+            </nav>
+            <div class="h-6 w-[1px] bg-stone-700"></div>
+            <div class="flex gap-2">
+                <button onclick="loadTemplate('community')" class="text-[9px] font-black bg-stone-800 border border-stone-700 px-3 py-1.5 rounded hover:bg-stone-700">COMMUNITY</button>
+                <button onclick="loadTemplate('classic')" class="text-[9px] font-black bg-stone-800 border border-stone-700 px-3 py-1.5 rounded hover:bg-stone-700">CLASSIC</button>
+                <button onclick="loadTemplate('modern')" class="text-[9px] font-black bg-stone-800 border border-stone-700 px-3 py-1.5 rounded hover:bg-stone-700">MODERN</button>
+            </div>
+        </div>
+    </header>
 
-        // Simple Icon Component for Lucide
-        const Icon = ({ name, size = 16, className = "" }) => {
-            const [svg, setSvg] = useState("");
-            
-            useEffect(() => {
-                // Initialize lucide icons after render
-                if (window.lucide) {
-                    window.lucide.createIcons();
-                }
-            }, []);
-
-            // Map icon names to lucide attributes
-            return <i data-lucide={name} style={{width: size, height: size}} className={className}></i>;
-        };
-
-        const App = () => {
-            const [blocks, setBlocks] = useState([
-                { id: '1', type: 'header', title: 'Community Event', subtitle: 'Join us for an inspiring experience' },
-                { id: '2', type: 'image-text', imageUrl: 'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=800&q=80', text: 'Welcome to our community page. This designer allows you to build beautiful, responsive layouts for your ChabadOne site.', layout: 'left' },
-                { id: '3', type: 'button', label: 'Register Now', link: '#', style: 'pill' }
-            ]);
-            
-            const [primaryColor, setPrimaryColor] = useState('#2c3e50');
-            const [accentColor, setAccentColor] = useState('#e67e22');
-            const [bgColor, setBgColor] = useState('#f4f4f4');
-            const [bootstrapTheme, setBootstrapTheme] = useState('3.3.7'); 
-            const [activeTab, setActiveTab] = useState('edit');
-            const [editingBlockId, setEditingBlockId] = useState(null);
-            const [copied, setCopied] = useState(false);
-
-            const bootstrapLinks = {
-                '3.3.7': 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css',
-                'paper': 'https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/paper/bootstrap.min.css',
-                'journal': 'https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/journal/bootstrap.min.css',
-                'lumen': 'https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/lumen/bootstrap.min.css',
-                'flatly': 'https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.3.7/flatly/bootstrap.min.css'
-            };
-
-            // --- Logic remains identical to your React code ---
-            const addBlock = (type) => {
-                const newBlock = {
-                    id: Math.random().toString(36).substr(2, 9),
-                    type,
-                    ...(type === 'header' && { title: 'New Section', subtitle: 'Description' }),
-                    ...(type === 'image-text' && { imageUrl: 'https://via.placeholder.com/800x400', text: 'Edit text here.', layout: 'left' }),
-                    ...(type === 'button' && { label: 'Click Here', link: '#', style: 'pill' }),
-                    ...(type === 'quote' && { text: 'Inspiring quote.' }),
-                    ...(type === 'grid' && { items: [{title: 'One', desc: 'Detail'}, {title: 'Two', desc: 'Detail'}, {title: 'Three', desc: 'Detail'}] })
-                };
-                setBlocks([...blocks, newBlock]);
-            };
-
-            const removeBlock = (id) => setBlocks(blocks.filter(b => b.id !== id));
-            const updateBlock = (id, field, value) => setBlocks(blocks.map(b => b.id === id ? { ...b, [field]: value } : b));
-            const moveBlock = (index, direction) => {
-                const newBlocks = [...blocks];
-                const targetIndex = index + direction;
-                if (targetIndex < 0 || targetIndex >= newBlocks.length) return;
-                [newBlocks[index], newBlocks[targetIndex]] = [newBlocks[targetIndex], newBlocks[index]];
-                setBlocks(newBlocks);
-            };
-
-            const generateBlockHTML = (block) => {
-                switch (block.type) {
-                    case 'header': return `<div style="background: linear-gradient(135deg, ${bgColor} 0%, #fff 100%); text-align: center; padding: 80px 20px; border-radius: 20px; margin-bottom: 30px; border: 1px solid rgba(0,0,0,0.05);"><h1 style="font-family: 'Playfair Display', serif; font-size: 3.5rem; color: ${primaryColor}; margin: 0; font-weight: 700;">${block.title}</h1><div style="font-style: italic; color: ${accentColor}; font-size: 1.3rem; margin-top: 15px;">${block.subtitle}</div></div>`;
-                    case 'image-text': return `<div class="container-fluid" style="margin-bottom: 40px;"><div class="row" style="display: flex; flex-direction: ${block.layout === 'right' ? 'row-reverse' : 'row'}; align-items: center;"><div class="col-md-5"><img src="${block.imageUrl}" style="border-radius: 12px; width: 100%; box-shadow: 0 15px 35px rgba(0,0,0,0.1);"></div><div class="col-md-7" style="padding: 20px; font-size: 1.15rem; line-height: 1.8;">${block.text}</div></div></div>`;
-                    case 'button': return `<div style="text-align: center; margin: 40px 0;"><a href="${block.link}" style="background: ${primaryColor}; color: #fff; padding: 16px 45px; text-decoration: none; border-radius: ${block.style === 'pill' ? '50px' : '4px'}; display: inline-block; font-weight: 600;">${block.label}</a></div>`;
-                    case 'quote': return `<div style="padding: 40px; border-left: 6px solid ${accentColor}; background: ${bgColor}; margin: 40px 0; font-size: 1.8rem; text-align: center; border-radius: 0 15px 15px 0;">"${block.text}"</div>`;
-                    default: return '';
-                }
-            };
-
-            const fullOutput = `<style>@import url('${bootstrapLinks[bootstrapTheme]}');</style>\n<div class="fancy-wrapper">\n${blocks.map(b => generateBlockHTML(b)).join('\n')}\n</div>`;
-
-            const copyToClipboard = () => {
-                navigator.clipboard.writeText(fullOutput);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-            };
-
-            return (
-                <div className="min-h-screen flex flex-col font-sans text-stone-800">
-                    <header className="bg-stone-900 text-white p-4 flex justify-between items-center sticky top-0 z-50">
-                        <h1 className="text-xl font-bold flex items-center gap-2">
-                             ChabadOne Builder <span className="text-amber-500">Elite</span>
-                        </h1>
-                        <div className="flex bg-stone-800 rounded-lg p-1">
-                            <button onClick={() => setActiveTab('edit')} className={`px-4 py-1 rounded ${activeTab === 'edit' ? 'bg-amber-600' : ''}`}>Design</button>
-                            <button onClick={() => setActiveTab('code')} className={`px-4 py-1 rounded ${activeTab === 'code' ? 'bg-amber-600' : ''}`}>Export</button>
+    <main class="flex-1 flex overflow-hidden">
+        <aside class="w-96 bg-white border-r border-stone-200 flex flex-col shadow-2xl z-40">
+            <div class="p-6 border-b border-stone-100 bg-stone-50/50">
+                <h2 class="text-[10px] font-black uppercase text-stone-400 mb-4 tracking-[0.2em]">Global Styles</h2>
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label class="setting-label">Theme Color</label>
+                        <div class="flex items-center gap-2">
+                            <input type="color" id="global-accent" value="#d97706" oninput="updateGlobalColor('accent', this.value)" class="swatch-input">
+                            <span class="text-[10px] font-mono text-stone-400" id="accent-hex">#D97706</span>
                         </div>
-                    </header>
-
-                    <main className="flex-1 flex overflow-hidden h-[calc(100vh-64px)]">
-                        <aside className="w-80 bg-white border-r overflow-y-auto p-6">
-                            <div className="mb-6">
-                                <label className="text-[10px] font-bold uppercase text-stone-400">Theme Base</label>
-                                <select value={bootstrapTheme} onChange={(e) => setBootstrapTheme(e.target.value)} className="w-full p-2 border rounded mt-1">
-                                    <option value="3.3.7">Bootstrap 3.3.7</option>
-                                    <option value="paper">Paper</option>
-                                    <option value="journal">Journal</option>
-                                </select>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-2 mb-6">
-                                <button onClick={() => addBlock('header')} className="p-2 border rounded text-xs font-bold hover:bg-stone-50">BANNER</button>
-                                <button onClick={() => addBlock('image-text')} className="p-2 border rounded text-xs font-bold hover:bg-stone-50">IMG+TXT</button>
-                                <button onClick={() => addBlock('button')} className="p-2 border rounded text-xs font-bold hover:bg-stone-50">BUTTON</button>
-                                <button onClick={() => addBlock('quote')} className="p-2 border rounded text-xs font-bold hover:bg-stone-50">QUOTE</button>
-                            </div>
-
-                            <div className="space-y-2">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-xs font-bold">Primary</span>
-                                    <input type="color" value={primaryColor} onChange={e => setPrimaryColor(e.target.value)} />
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <span className="text-xs font-bold">Accent</span>
-                                    <input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)} />
-                                </div>
-                            </div>
-                        </aside>
-
-                        <section className="flex-1 bg-stone-100 p-8 overflow-y-auto">
-                            {activeTab === 'edit' ? (
-                                <div className="max-w-3xl mx-auto space-y-4">
-                                    {blocks.map((block, index) => (
-                                        <div key={block.id} className="bg-white p-6 rounded-lg shadow-sm border border-stone-200 relative group">
-                                            <div className="absolute right-2 top-2 hidden group-hover:flex gap-2">
-                                                <button onClick={() => removeBlock(block.id)} className="text-red-500 text-xs">Delete</button>
-                                            </div>
-                                            <div dangerouslySetInnerHTML={{ __html: generateBlockHTML(block) }} />
-                                        </div>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="bg-stone-900 text-amber-100 p-6 rounded-lg h-full overflow-auto font-mono text-sm">
-                                    <button onClick={copyToClipboard} className="bg-amber-600 text-white px-4 py-2 rounded mb-4">
-                                        {copied ? 'Copied!' : 'Copy Code'}
-                                    </button>
-                                    <pre>{fullOutput}</pre>
-                                </div>
-                            )}
-                        </section>
-                    </main>
+                    </div>
+                    <div class="flex-1">
+                        <label class="setting-label">Page BG</label>
+                        <div class="flex items-center gap-2">
+                            <input type="color" id="global-bg" value="#ffffff" oninput="updateGlobalColor('bg', this.value)" class="swatch-input">
+                            <span class="text-[10px] font-mono text-stone-400" id="bg-hex">#FFFFFF</span>
+                        </div>
+                    </div>
                 </div>
-            );
+            </div>
+
+            <div id="settings-container" class="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                <div id="empty-settings" class="h-full flex flex-col items-center justify-center text-center opacity-30">
+                    <i class="fas fa-hand-pointer text-4xl mb-4"></i>
+                    <p class="text-xs font-medium uppercase tracking-widest">Select a block on the<br>canvas to edit details</p>
+                </div>
+                <div id="active-settings" class="hidden space-y-8 animate-in fade-in slide-in-from-left-2 duration-300"></div>
+            </div>
+
+            <div class="p-6 border-t border-stone-100 bg-stone-50/80">
+                <h2 class="text-[10px] font-black uppercase text-stone-400 mb-3 tracking-[0.2em]">Add Component</h2>
+                <div class="grid grid-cols-5 gap-2">
+                    <button onclick="addBlock('hero')" title="Hero" class="flex flex-col items-center gap-1 p-2 bg-white border border-stone-200 rounded-lg hover:border-amber-500 hover:text-amber-600 transition-colors">
+                        <i class="fas fa-image text-xs"></i>
+                        <span class="text-[7px] font-bold uppercase">Hero</span>
+                    </button>
+                    <button onclick="addBlock('feature')" title="Feature" class="flex flex-col items-center gap-1 p-2 bg-white border border-stone-200 rounded-lg hover:border-amber-500 hover:text-amber-600 transition-colors">
+                        <i class="fas fa-list-alt text-xs"></i>
+                        <span class="text-[7px] font-bold uppercase">Feat</span>
+                    </button>
+                    <button onclick="addBlock('quote')" title="Quote" class="flex flex-col items-center gap-1 p-2 bg-white border border-stone-200 rounded-lg hover:border-amber-500 hover:text-amber-600 transition-colors">
+                        <i class="fas fa-quote-left text-xs"></i>
+                        <span class="text-[7px] font-bold uppercase">Quote</span>
+                    </button>
+                    <button onclick="addBlock('action')" title="Button" class="flex flex-col items-center gap-1 p-2 bg-white border border-stone-200 rounded-lg hover:border-amber-500 hover:text-amber-600 transition-colors">
+                        <i class="fas fa-mouse-pointer text-xs"></i>
+                        <span class="text-[7px] font-bold uppercase">Btn</span>
+                    </button>
+                    <button onclick="addBlock('video')" title="Video" class="flex flex-col items-center gap-1 p-2 bg-white border border-stone-200 rounded-lg hover:border-amber-500 hover:text-amber-600 transition-colors">
+                        <i class="fas fa-play-circle text-xs"></i>
+                        <span class="text-[7px] font-bold uppercase">Video</span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <section class="flex-1 bg-stone-100 p-10 overflow-y-auto custom-scrollbar">
+            <div id="canvas-view" class="max-w-4xl mx-auto w-full space-y-8 pb-32"></div>
+
+            <div id="export-view" class="hidden h-full flex flex-col">
+                <div class="bg-stone-900 rounded-2xl overflow-hidden flex flex-col shadow-2xl h-full border border-stone-700">
+                    <div class="p-6 border-b border-stone-800 flex justify-between items-center bg-stone-800">
+                        <div>
+                            <h3 class="text-white text-sm font-bold tracking-tight">Production Output</h3>
+                            <p class="text-stone-500 text-[10px] uppercase font-bold">Paste into ChabadOne Content Editor</p>
+                        </div>
+                        <button onclick="copyCode()" id="copy-btn" class="bg-amber-600 hover:bg-amber-500 text-white px-8 py-2 rounded-lg font-bold text-xs transition-all shadow-lg">COPY CODE</button>
+                    </div>
+                    <textarea id="output-code" spellcheck="false" readonly class="flex-1 p-8 bg-transparent text-amber-200 text-[11px] font-mono outline-none resize-none leading-relaxed"></textarea>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        let blocks = [];
+        let editingId = null;
+        let globalAccent = '#d97706';
+        let globalBg = '#ffffff';
+
+        const FONTS = [
+            'Montserrat', 'Playfair Display', 'Lora', 'Oswald', 'Roboto Slab', 'Merriweather', 'Arial', 'Georgia'
+        ];
+
+        const TEMPLATES = {
+            community: [
+                { id: 't1', type: 'hero', title: 'Welcome Home', subtitle: 'A Warm Environment for Your Soul', padding: '120', bgColor: '#ffffff', titleColor: '#1c1917', font: 'Playfair Display', fontSize: '64', subtitleColor: '#d97706' },
+                { id: 't2', type: 'feature', title: 'Shabbat at the Center', text: 'Join us for inspiring services followed by a community Kiddush lunch.', imageUrl: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=800&q=80', layout: 'left', borderRadius: '12', titleSize: '28', bgColor: '#f9f8f6', textColor: '#1c1917', padding: '60', font: 'Montserrat' },
+                { id: 't3', type: 'quote', text: 'To be a Jew is to be a soul on fire.', author: 'The Lubavitcher Rebbe', accentColor: '#d97706', fontSize: '32', bgColor: '#ffffff', textColor: '#1c1917', padding: '80', font: 'Lora' },
+                { id: 't4', type: 'action', label: 'Support our Work', link: 'https://example.com/donate', btnColor: '#d97706', btnTextColor: '#ffffff', radius: '30', btnPadding: '15', bgColor: '#ffffff', padding: '40', font: 'Montserrat' }
+            ],
+            classic: [
+                { id: 'c1', type: 'hero', title: 'Traditional Values', subtitle: 'Timeless Wisdom for Modern Life', padding: '100', bgColor: '#fdfcfb', titleColor: '#3e2723', font: 'Georgia', fontSize: '50', subtitleColor: '#5d4037' },
+                { id: 'c2', type: 'quote', text: 'The candle of God is the soul of man.', author: 'Proverbs', accentColor: '#8d6e63', fontSize: '28', bgColor: '#ffffff', textColor: '#3e2723', padding: '60', font: 'Georgia' },
+                { id: 'c3', type: 'action', label: 'LEARN MORE', link: '#', btnColor: '#3e2723', btnTextColor: '#ffffff', radius: '0', btnPadding: '14', bgColor: '#fdfcfb', padding: '40', font: 'Oswald' }
+            ],
+            modern: [
+                { id: 'm1', type: 'hero', title: 'CONNECT.', subtitle: 'RELEVANT. AUTHENTIC. YOU.', padding: '150', bgColor: '#111827', titleColor: '#ffffff', font: 'Oswald', fontSize: '80', subtitleColor: '#fbbf24' },
+                { id: 'm2', type: 'video', videoId: 'dQw4w9WgXcQ', padding: '0', bgColor: '#111827' },
+                { id: 'm3', type: 'action', label: 'GET INVOLVED', link: '#', btnColor: '#fbbf24', btnTextColor: '#111827', radius: '50', btnPadding: '20', bgColor: '#111827', padding: '80', font: 'Montserrat' }
+            ]
         };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        function updateGlobalColor(type, val) {
+            if (type === 'accent') {
+                globalAccent = val;
+                document.getElementById('accent-hex').innerText = val.toUpperCase();
+                document.documentElement.style.setProperty('--theme-color', val);
+            } else {
+                globalBg = val;
+                document.getElementById('bg-hex').innerText = val.toUpperCase();
+            }
+            render();
+        }
+
+        function addBlock(type) {
+            const id = 'b' + Date.now();
+            let config = { id, type, padding: '60', bgColor: globalBg, textColor: '#1c1917', font: 'Montserrat' };
+
+            switch(type) {
+                case 'hero':
+                    Object.assign(config, { title: 'New Banner', subtitle: 'Headline text here', titleColor: '#1c1917', font: 'Playfair Display', fontSize: '48', subtitleColor: globalAccent });
+                    break;
+                case 'feature':
+                    Object.assign(config, { title: 'Our Feature', text: 'Explain the details here.', imageUrl: 'https://images.unsplash.com/photo-1518391846015-55a9cb000b21?auto=format&fit=crop&w=800&q=80', layout: 'left', borderRadius: '8', titleSize: '24' });
+                    break;
+                case 'quote':
+                    Object.assign(config, { text: 'Type your inspiration here.', author: 'Source Name', accentColor: globalAccent, fontSize: '24', font: 'Lora' });
+                    break;
+                case 'action':
+                    Object.assign(config, { label: 'Click Here', link: 'https://', btnColor: globalAccent, btnTextColor: '#ffffff', radius: '4', btnPadding: '12' });
+                    break;
+                case 'video':
+                    Object.assign(config, { videoId: '7R_C7rU2vS0', padding: '40' });
+                    break;
+            }
+
+            blocks.push(config);
+            editingId = id;
+            render();
+        }
+
+        function deleteBlock(id) {
+            blocks = blocks.filter(b => b.id !== id);
+            if(editingId === id) editingId = null;
+            render();
+        }
+
+        function move(idx, dir) {
+            const target = idx + dir;
+            if(target < 0 || target >= blocks.length) return;
+            [blocks[idx], blocks[target]] = [blocks[target], blocks[idx]];
+            render();
+        }
+
+        function update(key, val) {
+            const b = blocks.find(x => x.id === editingId);
+            if(b) {
+                b[key] = val;
+                render(false);
+            }
+        }
+
+        function selectBlock(id) {
+            editingId = id;
+            render();
+        }
+
+        function switchTab(tab) {
+            document.getElementById('canvas-view').style.display = tab === 'design' ? 'block' : 'none';
+            document.getElementById('export-view').style.display = tab === 'export' ? 'flex' : 'none';
+           
+            document.getElementById('tab-design').className = `tab-btn text-xs font-bold tracking-widest uppercase ${tab === 'design' ? 'text-white active' : 'text-stone-400 hover:text-white'}`;
+            document.getElementById('tab-export').className = `tab-btn text-xs font-bold tracking-widest uppercase ${tab === 'export' ? 'text-white active' : 'text-stone-400 hover:text-white'}`;
+           
+            if (tab === 'export') generateCode();
+        }
+
+        function render(resetSettings = true) {
+            const container = document.getElementById('canvas-view');
+            container.innerHTML = '';
+
+            blocks.forEach((b, idx) => {
+                const wrap = document.createElement('div');
+                wrap.className = `group relative bg-white shadow-sm border-2 rounded-xl transition-all mb-6 overflow-hidden ${editingId === b.id ? 'active-block' : 'border-stone-200'}`;
+                wrap.onclick = (e) => { e.stopPropagation(); selectBlock(b.id); };
+
+                let inner = '';
+                if(b.type === 'hero') {
+                    inner = `<div class="text-center" style="padding: ${b.padding}px 20px; background-color: ${b.bgColor};">
+                                <h1 style="font-family: '${b.font}'; color: ${b.titleColor}; font-size: ${b.fontSize}px; font-weight: 700; line-height: 1.2;">${b.title}</h1>
+                                <p style="font-family: '${b.font}'; color: ${b.subtitleColor}; font-style: italic; margin-top: 10px;">${b.subtitle}</p>
+                             </div>`;
+                } else if(b.type === 'feature') {
+                    inner = `<div class="flex gap-8 items-center ${b.layout === 'right' ? 'flex-row-reverse' : ''}" style="padding: ${b.padding}px; background-color: ${b.bgColor};">
+                                <div class="w-1/2"><img src="${b.imageUrl}" style="border-radius: ${b.borderRadius}px" class="w-full h-64 object-cover"></div>
+                                <div class="w-1/2">
+                                    <h3 class="font-bold mb-4" style="font-family: '${b.font}'; color: ${b.textColor}; font-size: ${b.titleSize}px;">${b.title}</h3>
+                                    <div class="text-sm leading-relaxed" style="font-family: '${b.font}'; color: ${b.textColor}; opacity: 0.8">${b.text}</div>
+                                </div>
+                             </div>`;
+                } else if(b.type === 'quote') {
+                    inner = `<div class="text-center" style="padding: ${b.padding}px; background-color: ${b.bgColor}; border-left: 8px solid ${b.accentColor}">
+                                <p style="font-family: '${b.font}'; font-size: ${b.fontSize}px; color: ${b.textColor}" class="italic font-serif">"${b.text}"</p>
+                                <div class="mt-4 text-[10px] font-bold uppercase tracking-widest" style="font-family: '${b.font}'; color: ${b.textColor}">— ${b.author}</div>
+                             </div>`;
+                } else if(b.type === 'action') {
+                    inner = `<div class="text-center" style="padding: ${b.padding}px; background-color: ${b.bgColor};">
+                                <button style="font-family: '${b.font}'; background: ${b.btnColor}; color: ${b.btnTextColor}; border-radius: ${b.radius}px; padding: ${b.btnPadding}px 40px; font-weight: 700; text-transform: uppercase; font-size: 13px; border:none;">${b.label}</button>
+                             </div>`;
+                } else if(b.type === 'video') {
+                    inner = `<div style="padding: ${b.padding}px; background-color: ${b.bgColor};">
+                                <div class="video-container rounded-lg shadow-lg">
+                                    <iframe src="https://www.youtube.com/embed/${b.videoId}" allowfullscreen></iframe>
+                                </div>
+                             </div>`;
+                }
+
+                wrap.innerHTML = `
+                    <div class="absolute right-4 top-4 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <button onclick="event.stopPropagation(); move(${idx}, -1)" class="p-2 bg-white/90 backdrop-blur border border-stone-200 rounded-lg hover:bg-white"><i class="fas fa-chevron-up text-[10px]"></i></button>
+                        <button onclick="event.stopPropagation(); move(${idx}, 1)" class="p-2 bg-white/90 backdrop-blur border border-stone-200 rounded-lg hover:bg-white"><i class="fas fa-chevron-down text-[10px]"></i></button>
+                        <button onclick="event.stopPropagation(); deleteBlock('${b.id}')" class="p-2 bg-red-50/90 backdrop-blur border border-red-100 rounded-lg text-red-500 hover:bg-red-50"><i class="fas fa-times text-[10px]"></i></button>
+                    </div>
+                    ${inner}
+                `;
+                container.appendChild(wrap);
+            });
+
+            if(resetSettings) renderSettings();
+        }
+
+        function renderSettings() {
+            const empty = document.getElementById('empty-settings');
+            const active = document.getElementById('active-settings');
+           
+            const b = editingId ? blocks.find(x => x.id === editingId) : null;
+           
+            if(!b) {
+                empty.style.display = 'flex';
+                active.style.display = 'none';
+                return;
+            }
+           
+            empty.style.display = 'none';
+            active.style.display = 'block';
+           
+            let html = `<div class="settings-panel pl-4 space-y-6">`;
+
+            // Block Colors
+            html += `<div class="bg-stone-50 p-4 rounded-lg space-y-4">
+                        <h3 class="text-[9px] font-black uppercase text-stone-400 tracking-tighter">Block Styling</h3>
+                        <div class="flex gap-4">
+                            <div class="flex-1">
+                                <label class="setting-label">Background</label>
+                                <input type="color" value="${b.bgColor}" oninput="update('bgColor', this.value)" class="swatch-input">
+                            </div>
+                            <div class="flex-1">
+                                <label class="setting-label">Padding</label>
+                                <input type="number" value="${b.padding}" oninput="update('padding', this.value)" class="setting-input">
+                            </div>
+                        </div>
+                        ${b.type !== 'video' ? `
+                        <div>
+                            <label class="setting-label">Base Font</label>
+                            <select onchange="update('font', this.value)" class="setting-input">
+                                ${FONTS.map(f => `<option value="${f}" ${b.font === f ? 'selected' : ''}>${f}</option>`).join('')}
+                            </select>
+                        </div>` : ''}
+                    </div>`;
+
+            if(b.type === 'hero') {
+                html += `
+                    <div><label class="setting-label">Headline Text</label><input type="text" value="${b.title}" oninput="update('title', this.value)" class="setting-input"></div>
+                    <div><label class="setting-label">Headline Color</label><input type="color" value="${b.titleColor}" oninput="update('titleColor', this.value)" class="swatch-input"></div>
+                    <div><label class="setting-label">Subtitle</label><input type="text" value="${b.subtitle}" oninput="update('subtitle', this.value)" class="setting-input"></div>
+                    <div><label class="setting-label">Subtitle Color</label><input type="color" value="${b.subtitleColor}" oninput="update('subtitleColor', this.value)" class="swatch-input"></div>
+                    <div><label class="setting-label">Font Size</label><input type="number" value="${b.fontSize}" oninput="update('fontSize', this.value)" class="setting-input"></div>
+                `;
+            } else if(b.type === 'feature') {
+                html += `
+                    <div><label class="setting-label">Headline</label><input type="text" value="${b.title}" oninput="update('title', this.value)" class="setting-input"></div>
+                    <div><label class="setting-label">Description</label><textarea oninput="update('text', this.value)" class="setting-input h-20">${b.text}</textarea></div>
+                    <div><label class="setting-label">Image URL</label><input type="text" value="${b.imageUrl}" oninput="update('imageUrl', this.value)" class="setting-input"></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="setting-label">Title Size</label><input type="number" value="${b.titleSize}" oninput="update('titleSize', this.value)" class="setting-input"></div>
+                        <div><label class="setting-label">Rounding</label><input type="number" value="${b.borderRadius}" oninput="update('borderRadius', this.value)" class="setting-input"></div>
+                    </div>
+                    <div><label class="setting-label">Layout</label><select onchange="update('layout', this.value)" class="setting-input"><option value="left" ${b.layout==='left'?'selected':''}>Left Image</option><option value="right" ${b.layout==='right'?'selected':''}>Right Image</option></select></div>
+                `;
+            } else if(b.type === 'quote') {
+                html += `
+                    <div><label class="setting-label">Quote Text</label><textarea oninput="update('text', this.value)" class="setting-input h-24">${b.text}</textarea></div>
+                    <div><label class="setting-label">Sidebar Color</label><input type="color" value="${b.accentColor}" oninput="update('accentColor', this.value)" class="swatch-input"></div>
+                    <div><label class="setting-label">Author Name</label><input type="text" value="${b.author}" oninput="update('author', this.value)" class="setting-input"></div>
+                    <div><label class="setting-label">Text Size</label><input type="number" value="${b.fontSize}" oninput="update('fontSize', this.value)" class="setting-input"></div>
+                `;
+            } else if(b.type === 'action') {
+                html += `
+                    <div><label class="setting-label">Button Label</label><input type="text" value="${b.label}" oninput="update('label', this.value)" class="setting-input"></div>
+                    <div><label class="setting-label">External Link (URL)</label><input type="text" value="${b.link}" placeholder="https://..." oninput="update('link', this.value)" class="setting-input"></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="setting-label">Btn Color</label><input type="color" value="${b.btnColor}" oninput="update('btnColor', this.value)" class="swatch-input"></div>
+                        <div><label class="setting-label">Text Color</label><input type="color" value="${b.btnTextColor}" oninput="update('btnTextColor', this.value)" class="swatch-input"></div>
+                    </div>
+                    <div><label class="setting-label">Roundedness (${b.radius}px)</label><input type="range" min="0" max="50" value="${b.radius}" oninput="update('radius', this.value)" class="w-full"></div>
+                `;
+            } else if(b.type === 'video') {
+                html += `
+                    <div><label class="setting-label">YouTube Video ID</label><input type="text" value="${b.videoId}" oninput="update('videoId', this.value)" class="setting-input" placeholder="e.g. dQw4w9WgXcQ"></div>
+                    <p class="text-[9px] text-stone-400 mt-2 italic">Find the ID at the end of a YouTube URL</p>
+                `;
+            }
+            html += `</div>`;
+            active.innerHTML = html;
+        }
+
+        function generateCode() {
+            let css = `<style type="text/css">
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&family=Lora:ital@0;1&family=Oswald:wght@400;700&family=Roboto+Slab:wght@400;700&family=Merriweather:wght@400;700&display=swap');
+    .co-wrap { font-family: 'Montserrat', sans-serif; line-height: 1.6; margin: 0; padding: 0; }
+    .co-b { width: 100%; clear: both; box-sizing: border-box; overflow: hidden; }
+    .co-btn { display: inline-block; text-decoration: none !important; transition: all 0.3s; text-align: center; border: none; cursor: pointer; }
+    .co-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+    .co-vid { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; }
+    .co-vid iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+    @media (max-width: 768px) {
+        .co-flex { display: block !important; }
+        .co-col { width: 100% !important; margin-bottom: 30px !important; }
+    }
+</style>\n`;
+
+            let html = `<div class="co-wrap" style="background-color:${globalBg};">\n`;
+
+            blocks.forEach(b => {
+                const bText = b.textColor || '#1c1917';
+                const f = b.font || 'Montserrat';
+                if(b.type === 'hero') {
+                    html += `  <div class="co-b" style="padding:${b.padding}px 20px; background-color:${b.bgColor}; text-align:center;">
+    <h1 style="font-family:'${f}', serif; color:${b.titleColor}; font-size:${b.fontSize}px; margin:0; font-weight:700; line-height:1.1;">${b.title}</h1>
+    <p style="font-family:'${f}', serif; color:${b.subtitleColor}; font-style:italic; margin:15px 0 0 0; font-size:20px;">${b.subtitle}</p>
+  </div>\n`;
+                } else if(b.type === 'feature') {
+                    html += `  <div class="co-b" style="padding:${b.padding}px 20px; background-color:${b.bgColor};">
+    <div class="co-flex" style="max-width:1100px; margin:0 auto; display:flex; align-items:center; gap:50px; flex-direction:${b.layout==='right'?'row-reverse':'row'};">
+        <div class="co-col" style="width:50%;"><img src="${b.imageUrl}" style="width:100%; border-radius:${b.borderRadius}px; display:block;" /></div>
+        <div class="co-col" style="width:50%;">
+            <h2 style="font-family:'${f}'; font-size:${b.titleSize}px; font-weight:700; color:${bText}; margin:0 0 20px 0;">${b.title}</h2>
+            <div style="font-family:'${f}'; color:${bText}; opacity:0.8; font-size:16px;">${b.text}</div>
+        </div>
+    </div>
+  </div>\n`;
+                } else if(b.type === 'quote') {
+                    html += `  <div class="co-b" style="padding:${b.padding}px 40px; background-color:${b.bgColor}; border-left:12px solid ${b.accentColor}; text-align:center;">
+    <div style="max-width:800px; margin:0 auto;">
+        <p style="font-family:'${f}', serif; font-size:${b.fontSize}px; font-style:italic; color:${bText}; margin:0;">"${b.text}"</p>
+        <div style="font-family:'${f}'; font-weight:700; font-size:11px; margin-top:20px; letter-spacing:3px; text-transform:uppercase; color:${bText}; opacity:0.6;">&mdash; ${b.author}</div>
+    </div>
+  </div>\n`;
+                } else if(b.type === 'action') {
+                    html += `  <div class="co-b" style="padding:${b.padding}px 20px; background-color:${b.bgColor}; text-align:center;">
+    <a href="${b.link}" target="_blank" class="co-btn" style="font-family:'${f}'; background:${b.btnColor}; color:${b.btnTextColor}; border-radius:${b.radius}px; padding:${b.btnPadding}px 50px; font-weight:700; text-transform:uppercase; font-size:14px; letter-spacing:1px;">${b.label}</a>
+  </div>\n`;
+                } else if(b.type === 'video') {
+                    html += `  <div class="co-b" style="padding:${b.padding}px 20px; background-color:${b.bgColor};">
+    <div style="max-width:900px; margin:0 auto;" class="co-vid">
+        <iframe src="https://www.youtube.com/embed/${b.videoId}" allowfullscreen></iframe>
+    </div>
+  </div>\n`;
+                }
+            });
+
+            html += `</div>`;
+            document.getElementById('output-code').value = css + html;
+        }
+
+        function copyCode() {
+            const el = document.getElementById('output-code');
+            el.select();
+            document.execCommand('copy');
+            const btn = document.getElementById('copy-btn');
+            btn.innerText = 'COPIED!';
+            btn.style.background = '#059669';
+            setTimeout(() => {
+                btn.innerText = 'COPY CODE';
+                btn.style.background = '#d97706';
+            }, 2000);
+        }
+
+        function loadTemplate(key) {
+            blocks = JSON.parse(JSON.stringify(TEMPLATES[key]));
+            editingId = blocks.length > 0 ? blocks[0].id : null;
+            render();
+        }
+
+        loadTemplate('community');
     </script>
 </body>
 </html>
